@@ -1,7 +1,23 @@
-stage('Code Lint & Quality Check') {
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'your-dockerhub-username/crypto-tracker'
+        IMAGE_TAG    = "${BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                // GitHub-la irundhu automatic code pull aagum
+                checkout scm
+            }
+        }
+
+        stage('Code Lint & Quality Check') {
             steps {
                 echo 'Running basic code validation checks...'
-                // sh-ku badhula bat vachuruken
+                // HTML validations check inga add pannalam
                 bat 'echo "HTML and CSS files verified successfully!"'
             }
         }
@@ -9,7 +25,6 @@ stage('Code Lint & Quality Check') {
         stage('Build Docker Image') {
             steps {
                 echo 'Building production Docker image...'
-                // Ella sh commands-aiyum bat-aa mathunga
                 bat "docker build -t ${DOCKER_IMAGE}:${IMAGE_TAG} ."
                 bat "docker tag ${DOCKER_IMAGE}:${IMAGE_TAG} ${DOCKER_IMAGE}:latest"
             }
@@ -17,11 +32,32 @@ stage('Code Lint & Quality Check') {
 
         stage('Push to Docker Hub') {
             steps {
+                // Note: Secure Docker credentials set panni irukkanum Jenkins-la
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                    // Windows-la echo string syntax konjam maarum
-                    bat "echo %PASS% | docker login -u %USER% --password-stdin"
+                    bat "echo ${PASS} | docker login -u ${USER} --password-stdin"
                     bat "docker push ${DOCKER_IMAGE}:${IMAGE_TAG}"
                     bat "docker push ${DOCKER_IMAGE}:latest"
                 }
             }
         }
+
+        stage('Deploy to Production') {
+            steps {
+                echo 'Deploying application container to server...'
+                // Pazhaya container running-la iruntha stop panni puthusa run pannum
+                bat "docker stop crypto-app || true && docker rm crypto-app || true"
+                bat "docker run -d -p 8080:80 --name crypto-app ${DOCKER_IMAGE}:latest"
+                echo 'Application deployed successfully on http://localhost:8080'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline Successfully Completed! Application is Up!'
+        }
+        failure {
+            echo 'Pipeline Failed Check logs immediately.'
+        }
+    }
+}
