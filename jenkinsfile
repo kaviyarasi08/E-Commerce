@@ -57,7 +57,7 @@ pipeline {
             echo 'Pipeline Successfully Completed! Application is Up!'
         }
         failure {
-            echo 'Pipeline Failed! Check logs immediately.'
+            echo 'Pipeline Failed Check logs immediately.'
         }
     }
 }
