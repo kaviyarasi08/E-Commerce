@@ -4,8 +4,8 @@ FROM nginx:alpine
 # Step 2: Copy custom Nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Step 3: Copy website files to Nginx public directory
-COPY src/ /usr/share/nginx/html/
+# Step 3: Copy website files (Current folder elathaiyum direct-a copy pannu)
+COPY . /usr/share/nginx/html/
 
 # Step 4: Expose port 80
 EXPOSE 80
