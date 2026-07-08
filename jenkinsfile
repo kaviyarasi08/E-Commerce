@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'your-dockerhub-username/crypto-tracker'
+        // Ungaloda original Docker Hub username 'kaviyarasi08' nu mathiruken bro
+        DOCKER_IMAGE = 'kaviyarasi08/crypto-tracker'
         IMAGE_TAG    = "${BUILD_NUMBER}"
     }
 
