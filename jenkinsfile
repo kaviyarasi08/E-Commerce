@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // Ungaloda original Docker Hub username 'kaviyarasi08' nu mathiruken bro
         DOCKER_IMAGE = 'kaviyarasi08/crypto-tracker'
         IMAGE_TAG    = "${BUILD_NUMBER}"
     }
@@ -18,7 +17,6 @@ pipeline {
         stage('Code Lint & Quality Check') {
             steps {
                 echo 'Running basic code validation checks...'
-                // HTML validations check inga add pannalam
                 bat 'echo "HTML and CSS files verified successfully!"'
             }
         }
@@ -33,9 +31,10 @@ pipeline {
 
         stage('Push to Docker Hub') {
             steps {
-                // Note: Secure Docker credentials set panni irukkanum Jenkins-la
+                // IMPORTANT: Jenkins Credentials Manager-la 'docker-hub-credentials' nu ID irukanum!
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                    bat "echo ${PASS} | docker login -u ${USER} --password-stdin"
+                    // Windows Batch environment parameters (%USER% & %PASS%) moolam secure evaluation
+                    bat 'echo %PASS% | docker login -u %USER% --password-stdin'
                     bat "docker push ${DOCKER_IMAGE}:${IMAGE_TAG}"
                     bat "docker push ${DOCKER_IMAGE}:latest"
                 }
@@ -45,8 +44,9 @@ pipeline {
         stage('Deploy to Production') {
             steps {
                 echo 'Deploying application container to server...'
-                // Pazhaya container running-la iruntha stop panni puthusa run pannum
-                bat "docker stop crypto-app || true && docker rm crypto-app || true"
+                // Windows CMD-ku thagundha madhiri || condition execution
+                bat "docker stop crypto-app >nul 2>&1 || echo Container not running"
+                bat "docker rm crypto-app >nul 2>&1 || echo Container does not exist"
                 bat "docker run -d -p 8080:80 --name crypto-app ${DOCKER_IMAGE}:latest"
                 echo 'Application deployed successfully on http://localhost:8080'
             }
@@ -58,7 +58,7 @@ pipeline {
             echo 'Pipeline Successfully Completed! Application is Up!'
         }
         failure {
-            echo 'Pipeline Failed Check logs immediately.'
+            echo 'Pipeline Failed. Check logs immediately.'
         }
     }
 }
